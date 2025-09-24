@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MedLink</title>
+    <link rel="icon" href="images/iconhead.jpg" />
+    <link href="images/logo.jpg" rel="icon" />
+    <link href="styles/Appointment.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+      integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <%- include('includes/header') %>
+    <section class="appointment-container">
+      <h2>
+        <i class="fa-solid fa-calendar-check"></i> Book Your Appointment
+        <i class="fa-solid fa-calendar-check"></i>
+      </h2>
+      <% if (req.session && req.session.user) { %>
+      <form id="appointmentForm" method="POST" action="/book-appointment">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              value="<%= req.session.user ? req.session.user.name : '' %>"
+            />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" required />
+          </div>
+          <div class="form-group">
+            <label for="appointment-date">Select Date:</label>
+            <input
+              type="date"
+              id="appointment-date"
+              name="appointmentDate"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="speciality">Speciality</label>
+            <select id="speciality" name="speciality" required>
+              <option value="">--Select Speciality--</option>
+              <option value="General practitioner">General practitioner</option>
+              <option value="Dentistry">Dentistry</option>
+              <option value="Neurology">Neurology</option>
+              <option value="X-Ray">X-Ray</option>
+              <option value="Dermatology">Dermatology</option>
+              <option value="Urology">Urology</option>
+              <option value="Psychiatry">Psychiatry</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="doctor">Select Doctor</label>
+            <select id="doctor" name="doctor" required>
+              <option value="">--Choose a Doctor--</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="timeslot">Available Timeslots</label>
+          <select id="timeslot" name="timeslot" required>
+            <option value="">--Select a Timeslot--</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <label for="message">Additional Notes</label>
+          <textarea id="message" name="message" rows="4"></textarea>
+        </div>
+
+        <button type="submit">Book Appointment</button>
+      </form>
+      <% } else { %>
+      <p>
+        Please <a href="/login">login</a> or <a href="/register">register</a> to
+        book an appointment.
+      </p>
+      <% } %>
+    </section>
+
+    <%- include('includes/footer') %>
+  </body>
+  <script src="js/home1.js"></script>
+</html>
