@@ -1,0 +1,75 @@
+[
+    {
+      "img": "/images/one.jpg",
+      "name": "Dr. Arjun Sinha",
+      "field": "General practitioner",
+      "experience": "10 years",
+      "qualification": "MBBS",
+      "rating": 4.5
+    },
+    {
+      "img": "/images/two.jpg",
+      "name": "Dr. Shaurya Khanna",
+      "field": "Neurology",
+      "experience": "8 years",
+      "qualification": "MD",
+      "rating": 4.7
+    },
+    {
+      "img": "/images/three.jpg",
+      "name": "Dr. Rakesh Nair",
+      "field": "Dentistry",
+      "experience": "12 years",
+      "qualification": "MBBch",
+      "rating": 4.3
+    },
+    {
+      "img": "/images/four.jpg",
+      "name": "Dr. Rahul Singla",
+      "field": "Psychiatry",
+      "experience": "15 years",
+      "qualification": "DO",
+      "rating": 4.8
+    },
+    {
+      "img": "/images/five.jpg",
+      "name": "Dr. Meera Joshi",
+      "field": "Pathology",
+      "experience": "9 years",
+      "qualification": "MBBS",
+      "rating": 4.4
+    },
+    {
+      "img": "/images/six.jpg",
+      "name": "Dr. Kartik Iyer",
+      "field": "Prosthodontics",
+      "experience": "7 years",
+      "qualification": "MD",
+      "rating": 4.6
+    },
+    {
+      "img": "/images/seven.jpg",
+      "name": "Dr. Priya Deshmukh",
+      "field": "Gynecologist",
+      "experience": "11 years",
+      "qualification": "MBBS",
+      "rating": 4.9
+    },
+    {
+      "img": "/images/eight.jpg",
+      "name": "Dr. Nikhil Bansal",
+      "field": "Urology",
+      "experience": "6 years",
+      "qualification": "MBBch",
+      "rating": 4.2
+    },
+    {
+      "img": "/images/nine.jpg",
+      "name": "Dr. Radhika Menon",
+      "field": "Dermatology",
+      "experience": "13 years",
+      "qualification": "MD",
+      "rating": 4.7
+    }
+  ]
+  
