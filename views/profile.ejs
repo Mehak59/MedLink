@@ -30,6 +30,13 @@
           <p><strong>Email:</strong> <span id="info-email">Loading...</span></p>
         </div>
       </div>
+      <div class="medicines-section">
+        <h3>Purchased Medicines</h3>
+        <button id="clear-medicines-btn" class="clear-btn">Clear All Medicines</button>
+        <div id="medicines-list">
+          <div class="no-medicines">No medicines purchased yet.</div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -48,11 +55,34 @@
               data.user.username || "N/A";
             document.getElementById("info-email").textContent =
               data.user.email || "N/A";
+
+            // Display purchased medicines
+            const medicinesList = document.getElementById("medicines-list");
+            if (data.user.purchasedMedicines && data.user.purchasedMedicines.length > 0) {
+              medicinesList.innerHTML = '';
+              data.user.purchasedMedicines.forEach(medicine => {
+                const medicineCard = document.createElement('div');
+                medicineCard.className = 'medicine-card';
+                medicineCard.innerHTML = `
+                  <img src="${medicine.image}" alt="${medicine.name}" class="medicine-image">
+                  <div class="medicine-details">
+                    <h4>${medicine.name}</h4>
+                    <p>Quantity: ${medicine.quantity}</p>
+                    <p>Price: ₹${medicine.price}</p>
+                    <p>Date: ${new Date(medicine.date).toLocaleDateString()}</p>
+                  </div>
+                `;
+                medicinesList.appendChild(medicineCard);
+              });
+            } else {
+              medicinesList.innerHTML = '<div class="no-medicines">No medicines purchased yet.</div>';
+            }
           } else {
             document.getElementById("user-name").textContent = "Guest";
             document.getElementById("info-name").textContent = "N/A";
             document.getElementById("info-username").textContent = "N/A";
             document.getElementById("info-email").textContent = "N/A";
+            document.getElementById("medicines-list").innerHTML = '<div class="no-medicines">No medicines purchased yet.</div>';
           }
         } catch (error) {
           console.error("Failed to fetch user info:", error);
@@ -61,8 +91,30 @@
           document.getElementById("info-name").textContent = "Error";
           document.getElementById("info-username").textContent = "Error";
           document.getElementById("info-email").textContent = "Error";
+          document.getElementById("medicines-list").innerHTML = '<div class="no-medicines">Error loading medicines.</div>';
         }
       }
+
+      // Clear all medicines button
+      document.getElementById('clear-medicines-btn').addEventListener('click', async () => {
+        if (confirm('Are you sure you want to clear all purchased medicines?')) {
+          try {
+            const response = await fetch('/api/users/clear-medicines', {
+              method: 'DELETE'
+            });
+            if (response.ok) {
+              alert('All medicines cleared successfully!');
+              fetchUserInfo(); // Refresh the profile
+            } else {
+              alert('Failed to clear medicines.');
+            }
+          } catch (error) {
+            console.error('Error clearing medicines:', error);
+            alert('Error clearing medicines.');
+          }
+        }
+      });
+
       fetchUserInfo();
     </script>
     <%- include('includes/footer') %>

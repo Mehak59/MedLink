@@ -107,6 +107,67 @@ const logoutUser = (req, res, next) => {
     });
 };
 
+const purchaseMedicines = async (req, res, next) => {
+    if (!req.session.user) {
+        return res.status(401).json({ message: 'Not authorized, please log in' });
+    }
+
+    const { medicines } = req.body;
+    if (!medicines || !Array.isArray(medicines) || medicines.length === 0) {
+        return res.status(400).json({ message: 'No medicines provided' });
+    }
+
+    try {
+        const user = await User.findById(req.session.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Aggregate purchased medicines: if same name exists, add quantity and price
+        medicines.forEach(newMed => {
+            const existing = user.purchasedMedicines.find(med => med.name === newMed.name);
+            if (existing) {
+                existing.quantity += newMed.quantity;
+                existing.price += newMed.price; // assuming price is total for quantity
+                existing.date = new Date(); // update date to latest
+            } else {
+                user.purchasedMedicines.push(newMed);
+            }
+        });
+
+        // Limit to 10 entries, remove oldest if exceeds
+        if (user.purchasedMedicines.length > 10) {
+            user.purchasedMedicines = user.purchasedMedicines.slice(-10); // keep last 10 (most recent)
+        }
+
+        await user.save();
+
+        res.status(200).json({ message: 'Medicines purchased successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const clearPurchasedMedicines = async (req, res, next) => {
+    if (!req.session.user) {
+        return res.status(401).json({ message: 'Not authorized, please log in' });
+    }
+
+    try {
+        const user = await User.findById(req.session.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.purchasedMedicines = [];
+        await user.save();
+
+        res.status(200).json({ message: 'All purchased medicines cleared successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
 const resetPassword = async (req, res, next) => {
     const { email, newPassword, confirmPassword, responseType } = req.body;
 
@@ -150,5 +211,7 @@ module.exports = {
     loginUser,
     getUserProfile,
     logoutUser,
+    purchaseMedicines,
+    clearPurchasedMedicines,
     resetPassword,
 };

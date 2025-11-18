@@ -206,6 +206,82 @@ a:hover {
   margin: 8px 0;
   font-size: 15px;
 }
+
+.medicines-section {
+  margin-top: 40px;
+}
+
+.medicines-section h3 {
+  color: #146c94;
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#medicines-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.medicine-card {
+  display: flex;
+  align-items: center;
+  background-color: #f3f9fb;
+  border: 1px solid #d1ecf1;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.medicine-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.medicine-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 15px;
+}
+
+.medicine-details h4 {
+  margin: 0 0 8px 0;
+  color: #146c94;
+  font-size: 18px;
+}
+
+.medicine-details p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.no-medicines {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.clear-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.clear-btn:hover {
+  background-color: #c82333;
+}
 footer {
   background-color: #afd3e2;
   border-top-left-radius: 100px;
