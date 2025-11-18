@@ -53,11 +53,12 @@
             <span>Doctors on Call</span>
           </div>
         </div>
-         <% if (req.session && req.session.user) { %>
+        <% if (req.session && req.session.user) { %>
           <a href="/profile"><button class="join-btn">My Profile</button></a>
         <% } else { %>
           <a href="/register"><button class="join-btn">Join Today!</button></a>
         <% } %>
+        <a href="/doctorRegister"><button class="join-btn" style="margin-left: 10px;">Doctor Register/Login</button></a>
       </div>
     </section>
 

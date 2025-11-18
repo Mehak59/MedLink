@@ -6,7 +6,11 @@ const doctorSchema = new mongoose.Schema({
   field: { type: String, required: true },
   experience: { type: String, required: true },
   qualification: { type: String, required: true },
-  rating: { type: Number, required: true }
+  rating: { type: Number, required: true },
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  location: { type: String, default: '' }
 });
 
 const Doctor = mongoose.model('Doctor', doctorSchema);

@@ -14,8 +14,11 @@ router.get('/Appointment', (req, res) => {
 })
 router.get('/findhospital', (req, res) => res.render('findHospital', { req }));
 router.get('/profile', (req, res) => res.render('profile', { req }));
+router.get('/doctorProfile', (req, res) => res.render('doctorProfile', { req }));
 router.get('/emergency', (req, res) => res.render('Emergency', { req }));
 router.get('/finddoctor', findDoctorPage);
+router.get('/doctorRegister', (req, res) => res.render('doctorRegister', { req }));
+router.get('/doctorLogin', (req, res) => res.render('doctorLogin', { req }));
 router.get('/pharmacy', async (req, res) => {
     const { loadMedicines, loadSliderImages, loadFitnessDeals, loadPersonalCareProducts, loadSurgicalDeals, loadSurgicalDevices } = require('../api/dataLoader');
     const medicines = await loadMedicines();

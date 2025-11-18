@@ -63,61 +63,25 @@
             value="<%= typeof req.query.search !== 'undefined' ? req.query.search : '' %>"
           />
           <h3>Speciality</h3>
-          <ul>
-            <% (Array.isArray(specialities) ? specialities : []).forEach(s => {
-            %>
-            <li>
-              <input type="checkbox" id="<%= s.id %>" name="speciality"
-              value="<%= s.name %>" <%= (Array.isArray(req.query.speciality) ?
-              req.query.speciality.includes(s.name) : req.query.speciality ===
-              s.name) ? 'checked' : '' %>>
-              <label for="<%= s.id %>">
-                <img
-                  src="<%= s.icon %>"
-                  alt="<%= s.name %>"
-                  class="speciality-logo"
-                />
-                <%= s.name %>
-              </label>
-            </li>
+          <select name="speciality">
+            <option value="">All Specialities</option>
+            <% (Array.isArray(specialities) ? specialities : []).forEach(s => { %>
+            <option value="<%= s.name %>" <%= req.query.speciality === s.name ? 'selected' : '' %>><%= s.name %></option>
             <% }); %>
-          </ul>
+          </select>
           <h3>Qualification</h3>
-          <ul>
+          <select name="qualification">
+            <option value="">All Qualifications</option>
             <% ["MBBS", "MBBch", "MD", "DO"].forEach(q => { %>
-            <li>
-              <input type="checkbox" id="<%= q.toLowerCase() %>"
-              name="qualification" value="<%= q %>" <%=
-              (Array.isArray(req.query.qualification) ?
-              req.query.qualification.includes(q) : req.query.qualification ===
-              q) ? 'checked' : '' %>>
-              <label for="<%= q.toLowerCase() %>"><%= q %></label>
-            </li>
+            <option value="<%= q %>" <%= req.query.qualification === q ? 'selected' : '' %>><%= q %></option>
             <% }) %>
-          </ul>
-          <h3>Country</h3>
-          <ul>
-            <li>
-              <input type="checkbox" id="denmark" name="country" value="Denmark"
-              <%= req.query.country === 'Denmark' ? 'checked' : '' %>>
-              <label for="denmark">Denmark (DK)</label>
-            </li>
-          </ul>
-          <h3>District</h3>
-          <ul>
-            <li>
-              <input type="checkbox" id="copenhagen" name="district"
-              value="Copenhagen" <%= req.query.district === 'Copenhagen' ?
-              'checked' : '' %>>
-              <label for="copenhagen">Copenhagen (CPH)</label>
-            </li>
-          </ul>
+          </select>
+
           <button type="submit" class="update-search">Update search</button>
         </form>
 
         <div class="doctor-list">
           <div class="list-header">
-            <p>Showing 175 search results</p>
             <select>
               <option value="highest">Sort by: Highest rated</option>
             </select>
@@ -134,6 +98,7 @@
               >
                 <p><strong>Experience:</strong> <%= d.experience %></p>
                 <p><strong>Qualification:</strong> <%= d.qualification %></p>
+                <p><strong>Location:</strong> <%= d.location || 'Not specified' %></p>
                 <p><strong>Rating:</strong> <%= d.rating %> / 5</p>
               </div>
               <button
@@ -144,16 +109,6 @@
               </button>
             </div>
             <% }) %>
-          </div>
-
-          <div class="pagination">
-            <a href="#">&lt;</a>
-            <a href="#" class="active">1</a>
-            <a href="#">2</a>
-            <a href="#">3</a>
-            <a href="#">...</a>
-            <a href="#">20</a>
-            <a href="#">&gt;</a>
           </div>
         </div>
       </div>
