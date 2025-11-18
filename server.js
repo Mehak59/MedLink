@@ -3,6 +3,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const app = express();
 app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 const PORT = 8080;
 
 const logger = require('./middlewares/logger');
@@ -17,7 +18,7 @@ const pageRoutes = require('./routes/pageRoutes');
 const userRoutes = require('./routes/userRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 
-const mongoURI = 'mongodb://127.0.0.1:27017/Hospital';
+const mongoURI = 'mongodb://127.0.0.1:27017/Medlink';
 mongoose.connect(mongoURI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));

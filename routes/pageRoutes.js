@@ -16,6 +16,18 @@ router.get('/findhospital', (req, res) => res.render('findHospital', { req }));
 router.get('/profile', (req, res) => res.render('profile', { req }));
 router.get('/emergency', (req, res) => res.render('Emergency', { req }));
 router.get('/finddoctor', findDoctorPage);
-
+router.get('/pharmacy', async (req, res) => {
+    const { loadMedicines, loadSliderImages, loadFitnessDeals, loadPersonalCareProducts, loadSurgicalDeals, loadSurgicalDevices } = require('../api/dataLoader');
+    const medicines = await loadMedicines();
+    const sliderImages = await loadSliderImages();
+    const fitnessDeals = await loadFitnessDeals();
+    const personalCareProducts = await loadPersonalCareProducts();
+    const surgicalDeals = await loadSurgicalDeals();
+    const surgicalDevices = await loadSurgicalDevices();
+    res.render('medicine', { req, medicines, sliderImages, fitnessDeals, personalCareProducts, surgicalDeals, surgicalDevices });
+});
+router.get('/cart', (req, res) => res.render('medcart', { req }));
+router.get('/payment', (req, res) => res.render('payment', { req }));
+router.get('/order-by-prescription', (req, res) => res.render('orderByPrescription', { req }));
 
 module.exports = router;
