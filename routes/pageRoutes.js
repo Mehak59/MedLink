@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { findDoctorPage } = require('../controllers/doctorController');
+const PendingDoctor = require('../models/pendingDoctor');
+const Doctor = require('../models/doctor');
 
 router.get('/', (req, res) => res.render('home1', { req }));
 router.get('/login', (req, res) => res.render('login', { req }));
@@ -9,8 +11,9 @@ router.get('/register', (req, res) => res.render('register', { req }));
 router.get('/about', (req, res) => res.render('Aboutus', { req }));
 router.get('/contact', (req, res) => res.render('contact', { req }));
 router.get('/reset', (req, res) => res.render('reset', { req }));
-router.get('/Appointment', (req, res) => {
-  res.render('Appointment', { req })
+router.get('/Appointment', async (req, res) => {
+  const specialities = await Doctor.distinct('field');
+  res.render('Appointment', { req, specialities })
 })
 router.get('/findhospital', (req, res) => res.render('findHospital', { req }));
 router.get('/profile', (req, res) => res.render('profile', { req }));
@@ -32,5 +35,13 @@ router.get('/pharmacy', async (req, res) => {
 router.get('/cart', (req, res) => res.render('medcart', { req }));
 router.get('/payment', (req, res) => res.render('payment', { req }));
 router.get('/order-by-prescription', (req, res) => res.render('orderByPrescription', { req }));
+router.get('/admin', async (req, res, next) => {
+  try {
+    const pendingDoctors = await PendingDoctor.find();
+    res.render('adminDashboard', { req, pendingDoctors });
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = router;

@@ -34,7 +34,12 @@
         <i class="fa-solid fa-calendar-check"></i>
       </h2>
       <% if (req.session && req.session.user) { %>
-      <form id="appointmentForm" method="POST" action="/book-appointment">
+
+      <form
+        id="appointmentForm"
+        method="POST"
+        action="/api/users/book-appointment"
+      >
         <div class="form-row">
           <div class="form-group">
             <label for="name">Full Name</label>
@@ -43,7 +48,8 @@
               id="name"
               name="name"
               required
-              value="<%= req.session.user ? req.session.user.name : '' %>"
+              value="<%= req.session.user ?
+req.session.user.name : '' %>"
             />
           </div>
           <div class="form-group">
@@ -95,6 +101,7 @@
             <option value="">--Select a Timeslot--</option>
           </select>
         </div>
+
         <div class="form-group full-width">
           <label for="message">Additional Notes</label>
           <textarea id="message" name="message" rows="4"></textarea>
@@ -113,4 +120,105 @@
     <%- include('includes/footer') %>
   </body>
   <script src="js/home1.js"></script>
+  <script>
+    document
+      .getElementById("speciality")
+      .addEventListener("change", function () {
+        const speciality = this.value;
+        const doctorSelect = document.getElementById("doctor");
+        const timeslotSelect = document.getElementById("timeslot");
+
+        // Clear previous options
+        doctorSelect.innerHTML =
+          '<option value="">--Choose a Doctor--</option>';
+        timeslotSelect.innerHTML =
+          '<option value="">--Select a Timeslot--</option>';
+
+        if (speciality) {
+          fetch(
+            `/api/doctors/speciality?speciality=${encodeURIComponent(
+              speciality
+            )}`
+          )
+            .then((response) => response.json())
+            .then((doctors) => {
+              doctors.forEach((doctor) => {
+                const option = document.createElement("option");
+                option.value = doctor._id;
+                option.textContent = doctor.name;
+                doctorSelect.appendChild(option);
+              });
+            })
+            .catch((error) => console.error("Error fetching doctors:", error));
+        }
+      });
+
+    document.getElementById("doctor").addEventListener("change", function () {
+      const doctor = this.value;
+      const date = document.getElementById("appointment-date").value;
+      const timeslotSelect = document.getElementById("timeslot");
+
+      timeslotSelect.innerHTML =
+        '<option value="">--Select a Timeslot--</option>';
+
+      if (doctor && date) {
+        // CALL NEW PUBLIC ENDPOINT
+        fetch(
+          `/api/doctors/available-slots?doctor=${encodeURIComponent(
+            doctor
+          )}&date=${encodeURIComponent(date)}`
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.slots && data.slots.length > 0) {
+              data.slots.forEach((slot) => {
+                const option = document.createElement("option");
+                option.value = slot;
+                option.textContent = slot;
+                timeslotSelect.appendChild(option);
+              });
+            } else {
+              // Provide feedback if no slots are found for the date
+              timeslotSelect.innerHTML =
+                '<option value="">--No Available Slots--</option>';
+            }
+          })
+          .catch((error) => console.error("Error fetching slots:", error));
+      }
+    });
+    document
+      .getElementById("appointment-date")
+      .addEventListener("change", function () {
+        const doctor = document.getElementById("doctor").value;
+        const date = this.value;
+        const timeslotSelect = document.getElementById("timeslot");
+
+        timeslotSelect.innerHTML =
+          '<option value="">--Select a Timeslot--</option>';
+
+        if (doctor && date) {
+          // CALL NEW PUBLIC ENDPOINT
+          fetch(
+            `/api/doctors/available-slots?doctor=${encodeURIComponent(
+              doctor
+            )}&date=${encodeURIComponent(date)}`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.slots && data.slots.length > 0) {
+                data.slots.forEach((slot) => {
+                  const option = document.createElement("option");
+                  option.value = slot;
+                  option.textContent = slot;
+                  timeslotSelect.appendChild(option);
+                });
+              } else {
+                timeslotSelect.innerHTML =
+                  '<option value="">--No Available Slots--</option>';
+              }
+            })
+            .catch((error) => console.error("Error fetching slots:", error));
+        }
+      });
+  </script>
 </html>

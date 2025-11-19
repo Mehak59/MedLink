@@ -1,6 +1,9 @@
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const User = require('./models/user');
+const Doctor = require('./models/doctor');
 const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -13,16 +16,58 @@ const session = require('express-session');
 const helmetMiddleware = require('./middlewares/helmet');
 const compression = require('compression');
 const { morganLogger, devLogger } = require('./middlewares/morgan');
+const cookieParser = require('cookie-parser');
 
 const pageRoutes = require('./routes/pageRoutes');
 const userRoutes = require('./routes/userRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const mongoURI = 'mongodb://127.0.0.1:27017/Medlink';
 mongoose.connect(mongoURI)
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(async () => {
+    console.log('MongoDB connected successfully');
+    // Check if admin exists, if not create one
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (!adminExists) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const admin = new User({
+        name: 'Admin',
+        username: 'admin',
+        email: 'admin@medlink.com',
+        password: hashedPassword,
+        role: 'admin'
+      });
+      await admin.save();
+      console.log('Default admin user created: username: admin, password: admin123');
+    }
+
+    // Check if test doctor exists, if not create one
+    const doctorExists = await Doctor.findOne({ username: 'doctor1' });
+    if (!doctorExists) {
+      const hashedPassword = await bcrypt.hash('doctor123', 10);
+      const testDoctor = new Doctor({
+        name: 'Dr. John Doe',
+        username: 'doctor1',
+        email: 'doctor1@medlink.com',
+        password: hashedPassword,
+        field: 'general',
+        qualification: 'MBBS',
+        experience: '5 years',
+        location: 'New York',
+        phone: '1234567890',
+        hospital: 'City Hospital',
+        fees: 100,
+        img: 'default.jpg',
+        availability: 'Available'
+      });
+      await testDoctor.save();
+      console.log('Test doctor created: username: doctor1, password: doctor123');
+    }
+  })
   .catch((err) => console.error('MongoDB connection error:', err));
 
+app.use(cookieParser());
 app.use(session({
   secret: '945138',
   resave: false,
@@ -40,6 +85,7 @@ app.use(devLogger);
 
 app.use('/api/users', userRoutes);
 app.use('/api/doctors', doctorRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use('/', pageRoutes);
 

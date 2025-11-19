@@ -1,4 +1,9 @@
 const User = require('../models/user');
+const Doctor = require('../models/doctor');
+const Appointment = require('../models/appointment');
+const DoctorSlot = require('../models/doctorSlot');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const registerUser = async (req, res, next) => {
     const { name, username, email, password, responseType } = req.body;
@@ -26,15 +31,20 @@ const registerUser = async (req, res, next) => {
             return res.status(409).json({ message: 'Username is already taken' });
         }
 
-        const user = await User.create({ name, username, email, password });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await User.create({ name, username, email, password: hashedPassword });
 
         if (user) {
-            req.session.user = { id: user._id, username: user.username, name: user.name };
-            
+            req.session.user = { id: user._id, username: user.username, name: user.name, role: user.role };
+
             if (responseType === 'redirect') {
-                return res.redirect('/'); 
+                if (user.role === 'admin') {
+                    return res.redirect('/admin');
+                } else {
+                    return res.redirect('/');
+                }
             }
-            
+
             return res.status(201).json({
                 message: 'User registered successfully',
                 user: { id: user._id, name: user.name, username: user.username, email: user.email }
@@ -53,18 +63,29 @@ const loginUser = async (req, res, next) => {
     }
 
     try {
-        const foundUser = await User.findOne({ username, password }).exec();
+        const foundUser = await User.findOne({ username }).exec();
 
-        if (foundUser) {
-            req.session.user = { id: foundUser._id, username: foundUser.username, name: foundUser.name };
-            
+        // Check if user exists AND if the provided password matches the hashed password
+        if (foundUser && (await bcrypt.compare(password, foundUser.password))) {
+        // Save user info, including role, to the session
+            req.session.user = { id: foundUser._id, username: foundUser.username, name: foundUser.name, role: foundUser.role };
+
+            // Generate JWT token
+            const token = jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '7d' });
+            res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days
+
             if (responseType === 'redirect') {
-                return res.redirect('/'); 
+                // Redirect admin to /admin dashboard
+                if (foundUser.role === 'admin') {
+                    return res.redirect('/admin');
+                } else {
+                    return res.redirect('/');
+                }
             }
 
             return res.status(200).json({
                 message: 'Login successful',
-                user: { id: foundUser._id, name: foundUser.name, username: foundUser.username }
+                user: { id: foundUser._id, name: foundUser.name, username: foundUser.username, role: foundUser.role }
             });
         } else {
             if (responseType === 'redirect') {
@@ -78,23 +99,20 @@ const loginUser = async (req, res, next) => {
 };
 
 const getUserProfile = async (req, res, next) => {
-    if (req.session && req.session.user) {
-        try {
-            const userData = await User.findById(req.session.user.id).select('-password').exec();
-            if (userData) {
-                res.status(200).json({ user: userData });
-            } else {
-                res.status(404).json({ message: 'User not found' });
-            }
-        } catch (err) {
-            next(err);
+    try {
+        const userData = await User.findById(req.user._id).select('-password').exec();
+        if (userData) {
+            res.status(200).json({ user: userData });
+        } else {
+            res.status(404).json({ message: 'User not found' });
         }
-    } else {
-        res.status(401).json({ message: 'Not authorized, please log in' });
+    } catch (err) {
+        next(err);
     }
 };
 
 const logoutUser = (req, res, next) => {
+    res.clearCookie('token');
     req.session.destroy((err) => {
         if (err) {
             return next(err);
@@ -108,17 +126,13 @@ const logoutUser = (req, res, next) => {
 };
 
 const purchaseMedicines = async (req, res, next) => {
-    if (!req.session.user) {
-        return res.status(401).json({ message: 'Not authorized, please log in' });
-    }
-
     const { medicines } = req.body;
     if (!medicines || !Array.isArray(medicines) || medicines.length === 0) {
         return res.status(400).json({ message: 'No medicines provided' });
     }
 
     try {
-        const user = await User.findById(req.session.user.id);
+        const user = await User.findById(req.user._id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -149,12 +163,8 @@ const purchaseMedicines = async (req, res, next) => {
 };
 
 const clearPurchasedMedicines = async (req, res, next) => {
-    if (!req.session.user) {
-        return res.status(401).json({ message: 'Not authorized, please log in' });
-    }
-
     try {
-        const user = await User.findById(req.session.user.id);
+        const user = await User.findById(req.user._id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -206,6 +216,53 @@ const resetPassword = async (req, res, next) => {
     }
 };
 
+const bookAppointment = async (req, res, next) => {
+    const { name, email, phone, speciality, doctor, appointmentDate, timeslot, message } = req.body;
+
+    if (!name || !email || !phone || !speciality || !doctor || !appointmentDate || !timeslot) {
+        return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
+    try {
+        // Find the doctor
+        const doctorDoc = await Doctor.findById(doctor);
+        if (!doctorDoc) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+
+        // Check if slot is available
+        const slot = await DoctorSlot.findOne({
+            doctor: doctor,
+            date: new Date(appointmentDate),
+            time: timeslot,
+            available: true
+        });
+
+        if (!slot) {
+            return res.status(400).json({ message: 'Selected slot is not available' });
+        }
+
+        // Create appointment
+        const appointment = await Appointment.create({
+            user: req.user._id,
+            doctor: doctor,
+            date: new Date(appointmentDate),
+            time: timeslot,
+            status: 'pending'
+        });
+
+        // Mark slot as unavailable
+        slot.available = false;
+        await slot.save();
+
+        // Instead of JSON, you should probably redirect the user after a successful booking.
+        // For now, we'll keep the JSON success response and rely on the client-side form submission to handle navigation.
+        res.status(201).json({ message: 'Appointment booked successfully', appointment });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -214,4 +271,5 @@ module.exports = {
     purchaseMedicines,
     clearPurchasedMedicines,
     resetPassword,
+    bookAppointment, // EXPORTED: This was the missing piece to fix the route
 };
