@@ -13,13 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
             description: formData.get('description')
         };
 
-        // Here you would typically send the data to your server
         console.log('Emergency request submitted:', emergencyData);
 
-        // For now, just show an alert
+        
         alert('Emergency request submitted successfully! Help is on the way.');
 
-        // Reset the form
+        
         emergencyForm.reset();
     });
 });

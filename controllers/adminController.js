@@ -22,23 +22,20 @@ const approveDoctor = async (req, res, next) => {
             return res.status(404).json({ message: 'Pending doctor not found' });
         }
 
-        // Create new doctor
         const newDoctor = new Doctor({
             img: pendingDoctor.image,
             name: pendingDoctor.name,
             field: pendingDoctor.specialization,
             experience: pendingDoctor.experience.toString(),
-            qualification: 'MD', // Assuming default, or add to pendingDoctor
-            rating: 5, // Default rating
+            qualification: 'MD', 
+            rating: 5, 
             username: pendingDoctor.username,
             email: pendingDoctor.email,
-            password: pendingDoctor.password, // Already hashed
+            password: pendingDoctor.password, 
             location: pendingDoctor.location
         });
 
         await newDoctor.save();
-
-        // Remove from pending
         await PendingDoctor.findByIdAndDelete(id);
 
         res.status(200).json({ message: 'Doctor approved successfully', doctor: newDoctor });
@@ -64,7 +61,7 @@ const rejectDoctor = async (req, res, next) => {
 
 const getUsers = async (req, res, next) => {
     try {
-        const users = await User.find({ role: 'user' }); // Exclude admin
+        const users = await User.find({ role: 'user' }); 
         res.status(200).json(users);
     } catch (err) {
         next(err);

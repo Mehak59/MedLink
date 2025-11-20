@@ -1,5 +1,4 @@
 const Doctor = require('../models/doctor');
-// ADDED: Import the bcrypt library for password hashing
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Appointment = require('../models/appointment');
@@ -85,7 +84,7 @@ const loginDoctor = async (req, res, next) => {
         const foundDoctor = await Doctor.findOne({ username }).exec();
 
         if (foundDoctor && await bcrypt.compare(password, foundDoctor.password)) {
-            // Generate JWT token
+            
             const token = jwt.sign({ id: foundDoctor._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
             res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
 
@@ -112,7 +111,7 @@ const getDoctorProfile = async (req, res, next) => {
     try {
         const doctorData = await Doctor.findById(req.user._id).select('-password').exec();
         if (doctorData) {
-            // Instead of sending JSON, render the dashboard and pass the doctor's data
+            
             res.render('doctorDashboard', { req: req, doctor: doctorData });
         } else {
             res.status(404).json({ message: 'Doctor not found' });
@@ -153,7 +152,6 @@ const updateDoctorProfile = async (req, res, next) => {
             return res.status(404).json({ message: 'Doctor not found' });
         }
 
-        // Update fields if provided
         if (name) doctor.name = name;
         if (email) doctor.email = email;
         if (field) doctor.field = field;
@@ -211,11 +209,10 @@ const getDoctorsBySpeciality = async (req, res, next) => {
             return res.status(400).json({ message: 'Speciality is required' });
         }
 
-        // FIX: Use a case-insensitive substring search for robustness.
         const doctors = await Doctor.find({ 
             field: { 
-                $regex: speciality,  // Substring match
-                $options: 'i'        // Case-insensitive
+                $regex: speciality,  
+                $options: 'i'        
             } 
         });
 
@@ -232,11 +229,9 @@ const getAvailableSlots = async (req, res, next) => {
             return res.status(400).json({ message: 'Doctor and date are required' });
         }
 
-        // Check if slots exist for the date, if not, generate them
         let slots = await DoctorSlot.find({ doctor, date: new Date(date) });
 
         if (slots.length === 0) {
-            // Generate slots from 9am to 5pm in 1-hour intervals
             const startHour = 9;
             const endHour = 17;
             slots = [];
@@ -252,7 +247,6 @@ const getAvailableSlots = async (req, res, next) => {
             }
         }
 
-        // Filter available slots
         const availableSlots = slots.filter(slot => slot.available).map(slot => slot.time);
         res.status(200).json({ slots: availableSlots });
     } catch (err) {

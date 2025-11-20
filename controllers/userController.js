@@ -35,7 +35,6 @@ const registerUser = async (req, res, next) => {
         const user = await User.create({ name, username, email, password: hashedPassword });
 
         if (user) {
-            // Generate JWT token for registered user
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
             res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
 
@@ -67,14 +66,12 @@ const loginUser = async (req, res, next) => {
     try {
         const foundUser = await User.findOne({ username }).exec();
 
-        // Check if user exists AND if the provided password matches the hashed password
         if (foundUser && (await bcrypt.compare(password, foundUser.password))) {
-            // Generate JWT token
+            
             const token = jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
             res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
 
             if (responseType === 'redirect') {
-                // Redirect admin to /admin dashboard
                 if (foundUser.role === 'admin') {
                     return res.redirect('/admin');
                 } else {
@@ -131,21 +128,18 @@ const purchaseMedicines = async (req, res, next) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Aggregate purchased medicines: if same name exists, add quantity and price
         medicines.forEach(newMed => {
             const existing = user.purchasedMedicines.find(med => med.name === newMed.name);
             if (existing) {
                 existing.quantity += newMed.quantity;
-                existing.price += newMed.price; // assuming price is total for quantity
-                existing.date = new Date(); // update date to latest
+                existing.price += newMed.price; 
+                existing.date = new Date();
             } else {
                 user.purchasedMedicines.push(newMed);
             }
         });
-
-        // Limit to 10 entries, remove oldest if exceeds
         if (user.purchasedMedicines.length > 10) {
-            user.purchasedMedicines = user.purchasedMedicines.slice(-10); // keep last 10 (most recent)
+            user.purchasedMedicines = user.purchasedMedicines.slice(-10); 
         }
 
         await user.save();
@@ -229,13 +223,10 @@ const bookAppointment = async (req, res, next) => {
     }
 
     try {
-        // Find the doctor
         const doctorDoc = await Doctor.findById(doctor);
         if (!doctorDoc) {
             return res.status(404).json({ message: 'Doctor not found' });
         }
-
-        // Check if slot is available
         const slot = await DoctorSlot.findOne({
             doctor: doctor,
             date: new Date(appointmentDate),
@@ -246,8 +237,6 @@ const bookAppointment = async (req, res, next) => {
         if (!slot) {
             return res.status(400).json({ message: 'Selected slot is not available' });
         }
-
-        // Create appointment
         const appointment = await Appointment.create({
             user: req.user._id,
             doctor: doctor,
@@ -255,13 +244,9 @@ const bookAppointment = async (req, res, next) => {
             time: timeslot,
             status: 'pending'
         });
-
-        // Mark slot as unavailable
         slot.available = false;
         await slot.save();
 
-        // Instead of JSON, you should probably redirect the user after a successful booking.
-        // For now, we'll keep the JSON success response and rely on the client-side form submission to handle navigation.
         res.status(201).json({ message: 'Appointment booked successfully', appointment });
     } catch (err) {
         next(err);
@@ -277,5 +262,5 @@ module.exports = {
     clearPurchasedMedicines,
     resetPassword,
     getUserAppointments,
-    bookAppointment, // EXPORTED: This was the missing piece to fix the route
+    bookAppointment, 
 };

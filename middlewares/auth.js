@@ -102,7 +102,6 @@ const checkAuthStatus = async (req, res, next) => {
                 return next();
             }
         } catch (err) {
-            // Invalid token, continue as not logged in
         }
     }
     req.isLoggedIn = false;

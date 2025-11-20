@@ -27,7 +27,6 @@ const mongoURI = 'mongodb://127.0.0.1:27017/Medlink';
 mongoose.connect(mongoURI)
   .then(async () => {
     console.log('MongoDB connected successfully');
-    // Check if admin exists, if not create one
     const adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -42,7 +41,6 @@ mongoose.connect(mongoURI)
       console.log('Default admin user created: username: admin, password: admin123');
     }
 
-    // Check if test doctor exists, if not create one
     const doctorExists = await Doctor.findOne({ username: 'doctor1' });
     if (!doctorExists) {
       const hashedPassword = await bcrypt.hash('doctor123', 10);
