@@ -1,10 +1,12 @@
-- [x] Install cookie-parser if not present
-- [x] Update server.js to use cookie-parser
-- [x] Update middlewares/auth.js: modify authenticateToken to check req.cookies.token
-- [x] Update controllers/userController.js: modify loginUser to generate JWT and set in cookie; update getUserProfile, purchaseMedicines, clearPurchasedMedicines, bookAppointment to use req.user instead of req.session.user
-- [x] Update routes/userRoutes.js: add authenticateToken middleware to protected routes (/profile, /user, /purchase, /clear-medicines, /book-appointment)
-- [x] Update logoutUser to clear JWT cookie
-- [x] Add optionalAuth middleware to page routes for JWT persistence
-- [x] Update header.ejs to check req.user for login status
-- [x] Test: login, refresh page, check if authenticated
-- [x] Revert all changes back to session-based authentication
+# TODO: Implement Different Headers and Footers for Admin and Doctor Dashboards
+
+## Steps to Complete
+
+- [ ] Create `views/includes/adminHeader.ejs`: Customized header for admin dashboard, using same CSS (navbar.css).
+- [ ] Create `views/includes/adminFooter.ejs`: Customized footer for admin dashboard, using same CSS as shared footer.
+- [ ] Create `views/includes/doctorHeader.ejs`: Customized header for doctor dashboard, using same CSS (navbar.css).
+- [ ] Create `views/includes/doctorFooter.ejs`: Customized footer for doctor dashboard, using same CSS as shared footer.
+- [ ] Update `views/adminDashboard.ejs`: Change includes to use `adminHeader` and `adminFooter` instead of shared ones.
+- [ ] Update `views/doctorDashboard.ejs`: Change includes to use `doctorHeader` and `doctorFooter` instead of shared ones.
+- [ ] Test the dashboards to ensure they render correctly with new headers/footers.
+- [ ] Update any CSS if necessary for the new includes (though using same CSS as other pages).

@@ -1,6 +1,7 @@
 const Doctor = require('../models/doctor');
 // ADDED: Import the bcrypt library for password hashing
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const Appointment = require('../models/appointment');
 const DoctorSlot = require('../models/doctorSlot');
 
@@ -84,7 +85,9 @@ const loginDoctor = async (req, res, next) => {
         const foundDoctor = await Doctor.findOne({ username }).exec();
 
         if (foundDoctor && await bcrypt.compare(password, foundDoctor.password)) {
-            req.session.doctor = { id: foundDoctor._id, username: foundDoctor.username, name: foundDoctor.name };
+            // Generate JWT token
+            const token = jwt.sign({ id: foundDoctor._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
+            res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
 
             if (responseType === 'redirect') {
                 return res.redirect('/api/doctors/profile');
@@ -106,31 +109,22 @@ const loginDoctor = async (req, res, next) => {
 };
 
 const getDoctorProfile = async (req, res, next) => {
-    if (req.session && req.session.doctor) {
-        try {
-            const doctorData = await Doctor.findById(req.session.doctor.id).select('-password').exec();
-            if (doctorData) {
-                // Instead of sending JSON, render the dashboard and pass the doctor's data
-                res.render('doctorDashboard', { req: req, doctor: doctorData });
-            } else {
-                res.status(404).json({ message: 'Doctor not found' });
-            }
-        } catch (err) {
-            next(err);
+    try {
+        const doctorData = await Doctor.findById(req.user._id).select('-password').exec();
+        if (doctorData) {
+            // Instead of sending JSON, render the dashboard and pass the doctor's data
+            res.render('doctorDashboard', { req: req, doctor: doctorData });
+        } else {
+            res.status(404).json({ message: 'Doctor not found' });
         }
-    } else {
-        // If not logged in, redirect to the login page
-        res.redirect('/doctorLogin');
+    } catch (err) {
+        next(err);
     }
 };
 
 const getDoctorProfileData = async (req, res, next) => {
-    if (!req.session.doctor) {
-        return res.status(401).json({ message: 'Not authorized, please log in' });
-    }
-
     try {
-        const doctorData = await Doctor.findById(req.session.doctor.id).select('-password').exec();
+        const doctorData = await Doctor.findById(req.user._id).select('-password').exec();
         if (doctorData) {
             res.status(200).json({ doctor: doctorData });
         } else {
@@ -142,27 +136,19 @@ const getDoctorProfileData = async (req, res, next) => {
 };
 
 const logoutDoctor = (req, res, next) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return next(err);
-        }
-        if (req.method === 'GET' || req.query.responseType === 'redirect') {
-            return res.redirect('/doctorLogin');
-        }
+    res.clearCookie('token');
+    if (req.method === 'GET' || req.query.responseType === 'redirect') {
+        return res.redirect('/doctorLogin');
+    }
 
-        res.status(200).json({ message: 'Logout successful' });
-    });
+    res.status(200).json({ message: 'Logout successful' });
 };
 
 const updateDoctorProfile = async (req, res, next) => {
-    if (!req.session.doctor) {
-        return res.status(401).json({ message: 'Not authorized, please log in' });
-    }
-
     const { name, email, field, qualification, experience, location, img } = req.body;
 
     try {
-        const doctor = await Doctor.findById(req.session.doctor.id);
+        const doctor = await Doctor.findById(req.user._id);
         if (!doctor) {
             return res.status(404).json({ message: 'Doctor not found' });
         }
@@ -275,12 +261,8 @@ const getAvailableSlots = async (req, res, next) => {
 };
 
 const getDoctorAppointments = async (req, res, next) => {
-    if (!req.session.doctor) {
-        return res.status(401).json({ message: 'Not authorized, please log in' });
-    }
-
     try {
-        const appointments = await Appointment.find({ doctor: req.session.doctor.id })
+        const appointments = await Appointment.find({ doctor: req.user._id })
             .populate('user', 'name email')
             .sort({ date: -1, time: -1 });
         res.status(200).json(appointments);
@@ -290,10 +272,6 @@ const getDoctorAppointments = async (req, res, next) => {
 };
 
 const manageSlotAvailability = async (req, res, next) => {
-    if (!req.session.doctor) {
-        return res.status(401).json({ message: 'Not authorized, please log in' });
-    }
-
     const { id } = req.params;
     const { available } = req.body;
 
@@ -303,7 +281,7 @@ const manageSlotAvailability = async (req, res, next) => {
             return res.status(404).json({ message: 'Slot not found' });
         }
 
-        if (slot.doctor.toString() !== req.session.doctor.id) {
+        if (slot.doctor.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Not authorized to manage this slot' });
         }
 
@@ -317,10 +295,6 @@ const manageSlotAvailability = async (req, res, next) => {
 };
 
 const getDoctorSlots = async (req, res, next) => {
-    if (!req.session.doctor) {
-        return res.status(401).json({ message: 'Not authorized, please log in' });
-    }
-
     const { date } = req.query;
     if (!date) {
         return res.status(400).json({ message: 'Date is required' });
@@ -328,7 +302,7 @@ const getDoctorSlots = async (req, res, next) => {
 
     try {
         const slots = await DoctorSlot.find({
-            doctor: req.session.doctor.id,
+            doctor: req.user._id,
             date: new Date(date)
         });
         res.status(200).json(slots);
@@ -338,27 +312,19 @@ const getDoctorSlots = async (req, res, next) => {
 };
 
 const getDoctorDashboard = async (req, res, next) => {
-    if (req.session && req.session.doctor) {
-        try {
-            const doctorData = await Doctor.findById(req.session.doctor.id).select('-password').exec();
-            if (doctorData) {
-                res.render('doctorDashboard', { req: req, doctor: doctorData });
-            } else {
-                res.status(404).json({ message: 'Doctor not found' });
-            }
-        } catch (err) {
-            next(err);
+    try {
+        const doctorData = await Doctor.findById(req.user._id).select('-password').exec();
+        if (doctorData) {
+            res.render('doctorDashboard', { req: req, doctor: doctorData });
+        } else {
+            res.status(404).json({ message: 'Doctor not found' });
         }
-    } else {
-        res.redirect('/doctorLogin');
+    } catch (err) {
+        next(err);
     }
 };
 
 const updateSlotTime = async (req, res, next) => {
-    if (!req.session.doctor) {
-        return res.status(401).json({ message: 'Not authorized, please log in' });
-    }
-
     const { id } = req.params;
     const { time } = req.body;
 
@@ -368,7 +334,7 @@ const updateSlotTime = async (req, res, next) => {
             return res.status(404).json({ message: 'Slot not found' });
         }
 
-        if (slot.doctor.toString() !== req.session.doctor.id) {
+        if (slot.doctor.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Not authorized to manage this slot' });
         }
 

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('./models/user');
 const Doctor = require('./models/doctor');
+const { checkAuthStatus } = require('./middlewares/auth');
 const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -12,7 +13,6 @@ const PORT = 8080;
 const logger = require('./middlewares/logger');
 const errorHandler = require('./middlewares/errorHandler');
 const allowCors = require('./middlewares/cors');
-const session = require('express-session');
 const helmetMiddleware = require('./middlewares/helmet');
 const compression = require('compression');
 const { morganLogger, devLogger } = require('./middlewares/morgan');
@@ -68,11 +68,6 @@ mongoose.connect(mongoURI)
   .catch((err) => console.error('MongoDB connection error:', err));
 
 app.use(cookieParser());
-app.use(session({
-  secret: '945138',
-  resave: false,
-  saveUninitialized: false,
-}));
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -82,6 +77,7 @@ app.use(allowCors);
 app.use(helmetMiddleware);
 app.use(morganLogger);
 app.use(devLogger);
+app.use(checkAuthStatus);
 
 app.use('/api/users', userRoutes);
 app.use('/api/doctors', doctorRoutes);

@@ -33,13 +33,9 @@
         <i class="fa-solid fa-calendar-check"></i> Book Your Appointment
         <i class="fa-solid fa-calendar-check"></i>
       </h2>
-      <% if (req.session && req.session.user) { %>
+      <% if (req.user) { %>
 
-      <form
-        id="appointmentForm"
-        method="POST"
-        action="/api/users/book-appointment"
-      >
+      <form id="appointmentForm">
         <div class="form-row">
           <div class="form-group">
             <label for="name">Full Name</label>
@@ -48,8 +44,8 @@
               id="name"
               name="name"
               required
-              value="<%= req.session.user ?
-req.session.user.name : '' %>"
+              value="<%= req.user ?
+req.user.name : '' %>"
             />
           </div>
           <div class="form-group">
@@ -219,6 +215,37 @@ req.session.user.name : '' %>"
             })
             .catch((error) => console.error("Error fetching slots:", error));
         }
+      });
+
+    // Handle form submission asynchronously
+    document
+      .getElementById("appointmentForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch("/api/users/book-appointment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.message === "Appointment booked successfully") {
+              alert("Appointment booked successfully!");
+              window.location.href = "/"; // Redirect to home page
+            } else {
+              alert("Error: " + (data.message || "Unknown error"));
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("An error occurred while booking the appointment.");
+          });
       });
   </script>
 </html>

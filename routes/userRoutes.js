@@ -9,7 +9,8 @@ const {
     purchaseMedicines,
     clearPurchasedMedicines,
     resetPassword,
-    bookAppointment // This is correctly imported from userController
+    getUserAppointments,
+    bookAppointment
 } = require('../controllers/userController');
 
 router.post('/register', registerUser);
@@ -20,6 +21,7 @@ router.get('/user', authenticateToken, getUserProfile);
 router.post('/purchase', authenticateToken, purchaseMedicines);
 router.delete('/clear-medicines', authenticateToken, clearPurchasedMedicines);
 router.post('/reset', resetPassword);
+router.get('/appointments', authenticateToken, getUserAppointments);
 
 // FIX: Added the missing POST route to handle the appointment form submission
 router.post('/book-appointment', authenticateToken, bookAppointment);

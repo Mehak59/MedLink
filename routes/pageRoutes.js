@@ -12,12 +12,19 @@ router.get('/about', (req, res) => res.render('Aboutus', { req }));
 router.get('/contact', (req, res) => res.render('contact', { req }));
 router.get('/reset', (req, res) => res.render('reset', { req }));
 router.get('/Appointment', async (req, res) => {
+  if (!req.isLoggedIn) return res.redirect('/login');
   const specialities = await Doctor.distinct('field');
   res.render('Appointment', { req, specialities })
 })
 router.get('/findhospital', (req, res) => res.render('findHospital', { req }));
-router.get('/profile', (req, res) => res.render('profile', { req }));
-router.get('/doctorProfile', (req, res) => res.render('doctorProfile', { req }));
+router.get('/profile', (req, res) => {
+  if (!req.isUser) return res.redirect('/login');
+  res.render('profile', { req, user: req.user });
+});
+router.get('/doctorProfile', (req, res) => {
+  if (!req.isDoctor) return res.redirect('/login');
+  res.render('doctorProfile', { req });
+});
 router.get('/emergency', (req, res) => res.render('Emergency', { req }));
 router.get('/finddoctor', findDoctorPage);
 router.get('/doctorRegister', (req, res) => res.render('doctorRegister', { req }));
@@ -36,6 +43,9 @@ router.get('/cart', (req, res) => res.render('medcart', { req }));
 router.get('/payment', (req, res) => res.render('payment', { req }));
 router.get('/order-by-prescription', (req, res) => res.render('orderByPrescription', { req }));
 router.get('/admin', async (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.redirect('/login');
+  }
   try {
     const pendingDoctors = await PendingDoctor.find();
     res.render('adminDashboard', { req, pendingDoctors });

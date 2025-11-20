@@ -31,11 +31,8 @@
     <section class="about-us">
       <div class="container">
         <h1>About Us</h1>
-        <% if (req.session.user) { %>
-        <p>
-          Welcome back, <%= req.session.user.name %>! Thanks for trusting
-          MedLink.
-        </p>
+        <% if (req.user) { %>
+        <p>Welcome back, <%= req.user.name %>! Thanks for trusting MedLink.</p>
         <% } else { %>
         <p>
           Welcome to <strong>MedLink</strong>, your trusted partner in finding

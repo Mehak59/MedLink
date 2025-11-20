@@ -35,7 +35,9 @@ const registerUser = async (req, res, next) => {
         const user = await User.create({ name, username, email, password: hashedPassword });
 
         if (user) {
-            req.session.user = { id: user._id, username: user.username, name: user.name, role: user.role };
+            // Generate JWT token for registered user
+            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
+            res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
 
             if (responseType === 'redirect') {
                 if (user.role === 'admin') {
@@ -67,12 +69,9 @@ const loginUser = async (req, res, next) => {
 
         // Check if user exists AND if the provided password matches the hashed password
         if (foundUser && (await bcrypt.compare(password, foundUser.password))) {
-        // Save user info, including role, to the session
-            req.session.user = { id: foundUser._id, username: foundUser.username, name: foundUser.name, role: foundUser.role };
-
             // Generate JWT token
-            const token = jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '7d' });
-            res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 days
+            const token = jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
+            res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
 
             if (responseType === 'redirect') {
                 // Redirect admin to /admin dashboard
@@ -113,16 +112,11 @@ const getUserProfile = async (req, res, next) => {
 
 const logoutUser = (req, res, next) => {
     res.clearCookie('token');
-    req.session.destroy((err) => {
-        if (err) {
-            return next(err);
-        }
-        if (req.method === 'GET' || req.query.responseType === 'redirect') {
-            return res.redirect('/login');
-        }
+    if (req.method === 'GET' || req.query.responseType === 'redirect') {
+        return res.redirect('/login');
+    }
 
-        res.status(200).json({ message: 'Logout successful' });
-    });
+    res.status(200).json({ message: 'Logout successful' });
 };
 
 const purchaseMedicines = async (req, res, next) => {
@@ -216,6 +210,17 @@ const resetPassword = async (req, res, next) => {
     }
 };
 
+const getUserAppointments = async (req, res, next) => {
+    try {
+        const appointments = await Appointment.find({ user: req.user._id })
+            .populate('doctor', 'name field')
+            .sort({ date: -1, time: -1 });
+        res.status(200).json(appointments);
+    } catch (err) {
+        next(err);
+    }
+};
+
 const bookAppointment = async (req, res, next) => {
     const { name, email, phone, speciality, doctor, appointmentDate, timeslot, message } = req.body;
 
@@ -271,5 +276,6 @@ module.exports = {
     purchaseMedicines,
     clearPurchasedMedicines,
     resetPassword,
+    getUserAppointments,
     bookAppointment, // EXPORTED: This was the missing piece to fix the route
 };
