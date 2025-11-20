@@ -1,28 +1,21 @@
 <footer>
   <div class="fcontainer">
     <div class="footer-col">
-      <h2>MedLink Admin</h2>
+      <h2>MedLink Doctor</h2>
       <p class="footer-para">
-        Admin panel for managing healthcare system, including doctor approvals,
-        user management, and appointment oversight.
+        Doctor panel for managing appointments, slots, and patient care.
       </p>
     </div>
     <div class="footer-col">
       <h3>
-        Admin Menu
+        Doctor Menu
         <div class="underline"><span></span></div>
       </h3>
       <ul>
         <li><a href="/api/doctors/profile">Doctor Dashboard</a></li>
-        <li>
-          <a href="#" onclick="switchTab('pending-doctors')">Pending Doctors</a>
-        </li>
-        <li><a href="#" onclick="switchTab('users')">Users</a></li>
-        <li><a href="#" onclick="switchTab('doctors')">Doctors</a></li>
-        <li>
-          <a href="#" onclick="switchTab('appointments')">Appointments</a>
-        </li>
-        <li><a href="/api/users/logout">Logout</a></li>
+        <li><a href="#" onclick="showSection('slots')">Manage Slots</a></li>
+        <li><a href="/doctorProfile">Profile</a></li>
+        <li><a href="/api/doctors/logout">Logout</a></li>
       </ul>
     </div>
     <div class="footer-col">

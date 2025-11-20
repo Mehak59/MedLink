@@ -7,12 +7,8 @@
     <img src="/images/icon.jpg" height="70px" width="150px" />
   </label>
   <ul>
-    <li><a href="/" class="active">Doctor Dashboard</a></li>
-    <li><a href="/services">Services</a></li>
-    <li><a href="/pharmacy">Pharmacy</a></li>
-
-    <li><a href="/about">About us</a></li>
-    <li><a href="/contact">Contact us</a></li>
+    <li><a href="/api/doctors/profile">Doctor Dashboard</a></li>
+    <li><a href="#" onclick="showSection('slots')">Manage Slots</a></li>
 
     <% let profileLink = null; let logoutLink = null; if (req.isUser) {
     profileLink = '/profile'; logoutLink = '/api/users/logout'; } else if
