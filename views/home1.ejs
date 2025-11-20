@@ -8,6 +8,12 @@
   <body>
     <%- include('includes/header') %>
 
+    <% if (req.query.message) { %>
+    <script>
+      alert('<%= req.query.message %>');
+    </script>
+    <% } %>
+
     <section class="container1">
       <div class="left-section">
         <h1>Connect with top-rated doctors in just a few clicks</h1>

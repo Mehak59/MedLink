@@ -61,7 +61,7 @@ const registerDoctor = async (req, res, next) => {
 
         if (pendingDoctor) {
             if (req.body.responseType === 'redirect') {
-                return res.redirect('/doctorRegister?success=PendingApproval');
+                return res.redirect('/?message=Please wait for the confirmation of admin for registration as a doctor');
             }
 
             return res.status(201).json({

@@ -4,6 +4,7 @@ const doctorController = require('../controllers/doctorController');
 const { authenticateDoctorToken } = require('../middlewares/auth');
 
 // Doctor authentication
+router.post('/register', doctorController.registerDoctor);
 router.post('/login', doctorController.loginDoctor);
 router.get('/logout', doctorController.logoutDoctor);
 router.post('/logout', doctorController.logoutDoctor);
