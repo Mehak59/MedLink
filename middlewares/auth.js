@@ -11,7 +11,7 @@ const authenticateToken = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'abdjd1258ueirjkk');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
         const user = await User.findById(decoded.id);
         if (!user) {
             return res.status(401).json({ message: 'Invalid token' });
@@ -31,7 +31,7 @@ const authenticateDoctorToken = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'abdjd1258ueirjkk');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
         const doctor = await Doctor.findById(decoded.id);
         if (!doctor) {
             return res.status(401).json({ message: 'Invalid token' });
@@ -49,7 +49,7 @@ const authenticateFromCookie = async (req, res, next) => {
         return res.status(401).json({ message: 'Access token required' });
     }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'abdjd1258ueirjkk');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
         const user = await User.findById(decoded.id);
         if (!user) {
             return res.status(401).json({ message: 'Invalid token' });
@@ -86,7 +86,7 @@ const checkAuthStatus = async (req, res, next) => {
     const token = req.cookies.token;
     if (token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'abdjd1258ueirjkk');
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
             const user = await User.findById(decoded.id);
             if (user) {
                 req.isLoggedIn = true;

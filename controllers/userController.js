@@ -36,7 +36,7 @@ const registerUser = async (req, res, next) => {
 
         if (user) {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
-            res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
+            res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); 
 
             if (responseType === 'redirect') {
                 if (user.role === 'admin') {
