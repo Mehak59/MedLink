@@ -23,7 +23,6 @@ router.delete('/clear-medicines', authenticateToken, clearPurchasedMedicines);
 router.post('/reset', resetPassword);
 router.get('/appointments', authenticateToken, getUserAppointments);
 
-// FIX: Added the missing POST route to handle the appointment form submission
 router.post('/book-appointment', authenticateToken, bookAppointment);
 
 module.exports = router;

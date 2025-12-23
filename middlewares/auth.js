@@ -1,16 +1,13 @@
 const User = require('../models/user');
 const Doctor = require('../models/doctor');
-const { verifyToken } = require('../utils/jwtHelper'); // ✅ Uses centralized secret
-
-// Generic function to extract and verify token from Header OR Cookie
+const { verifyToken } = require('../utils/jwtHelper'); 
 const verifyRequest = (req) => {
     const authHeader = req.headers['authorization'];
-    // Check cookie first, then header
     const token = req.cookies.token || (authHeader && authHeader.split(' ')[1]);
 
     if (!token) return null;
     try {
-        return verifyToken(token); // ✅ Uses correct secret from jwtHelper
+        return verifyToken(token); 
     } catch (err) {
         return null;
     }
@@ -44,8 +41,6 @@ const authenticateDoctorToken = async (req, res, next) => {
     }
 };
 
-// 👇 OLD BUGGY FUNCTION REPLACED
-// Since authenticateToken already checks cookies, we can just point to it.
 const authenticateFromCookie = authenticateToken;
 
 const requireSessionAuth = (req, res, next) => {
@@ -102,5 +97,5 @@ module.exports = {
     requireAdmin,
     requireDoctorAuth,
     checkAuthStatus,
-    authenticateFromCookie // Exporting the alias so adminRoutes works
+    authenticateFromCookie 
 };
