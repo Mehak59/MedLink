@@ -1,2 +1,0 @@
-- [ ] Add "Manage Slots" link to doctorHeader.ejs navigation menu
-- [ ] Update doctorFooter.ejs to doctor-specific footer with menu including "Manage Slots"

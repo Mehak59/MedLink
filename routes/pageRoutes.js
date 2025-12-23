@@ -1,8 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { findDoctorPage } = require('../controllers/doctorController');
+const { findDoctorPage, registerDoctor } = require('../controllers/doctorController');
 const PendingDoctor = require('../models/pendingDoctor');
 const Doctor = require('../models/doctor');
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/images/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 router.get('/', (req, res) => res.render('home1', { req }));
 router.get('/login', (req, res) => res.render('login', { req }));
@@ -14,7 +27,11 @@ router.get('/reset', (req, res) => res.render('reset', { req }));
 router.get('/Appointment', async (req, res) => {
   if (!req.isLoggedIn) return res.redirect('/login');
   const specialities = await Doctor.distinct('field');
-  res.render('Appointment', { req, specialities })
+  let selectedDoctor = null;
+  if (req.query.doctorId) {
+    selectedDoctor = await Doctor.findById(req.query.doctorId);
+  }
+  res.render('Appointment', { req, specialities, selectedDoctor })
 })
 router.get('/findhospital', (req, res) => res.render('findHospital', { req }));
 router.get('/profile', (req, res) => {
@@ -28,6 +45,7 @@ router.get('/doctorProfile', (req, res) => {
 router.get('/emergency', (req, res) => res.render('Emergency', { req }));
 router.get('/finddoctor', findDoctorPage);
 router.get('/doctorRegister', (req, res) => res.render('doctorRegister', { req }));
+router.post('/doctorRegister', upload.single('image'), registerDoctor);
 router.get('/doctorLogin', (req, res) => res.render('doctorLogin', { req }));
 router.get('/pharmacy', async (req, res) => {
     const { loadMedicines, loadSliderImages, loadFitnessDeals, loadPersonalCareProducts, loadSurgicalDeals, loadSurgicalDevices } = require('../api/dataLoader');

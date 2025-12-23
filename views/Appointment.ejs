@@ -50,7 +50,7 @@ req.user.name : '' %>"
           </div>
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" required />
+            <input type="email" id="email" name="email" required value="<%= req.user ? req.user.email : '' %>" />
           </div>
         </div>
 
@@ -75,19 +75,22 @@ req.user.name : '' %>"
             <label for="speciality">Speciality</label>
             <select id="speciality" name="speciality" required>
               <option value="">--Select Speciality--</option>
-              <option value="General practitioner">General practitioner</option>
-              <option value="Dentistry">Dentistry</option>
-              <option value="Neurology">Neurology</option>
-              <option value="X-Ray">X-Ray</option>
-              <option value="Dermatology">Dermatology</option>
-              <option value="Urology">Urology</option>
-              <option value="Psychiatry">Psychiatry</option>
+              <option value="General practitioner" <%= selectedDoctor && selectedDoctor.field === 'general' ? 'selected' : '' %>>General practitioner</option>
+              <option value="Dentistry" <%= selectedDoctor && selectedDoctor.field === 'dentistry' ? 'selected' : '' %>>Dentistry</option>
+              <option value="Neurology" <%= selectedDoctor && selectedDoctor.field === 'neurology' ? 'selected' : '' %>>Neurology</option>
+              <option value="X-Ray" <%= selectedDoctor && selectedDoctor.field === 'xray' ? 'selected' : '' %>>X-Ray</option>
+              <option value="Dermatology" <%= selectedDoctor && selectedDoctor.field === 'dermatology' ? 'selected' : '' %>>Dermatology</option>
+              <option value="Urology" <%= selectedDoctor && selectedDoctor.field === 'urology' ? 'selected' : '' %>>Urology</option>
+              <option value="Psychiatry" <%= selectedDoctor && selectedDoctor.field === 'psychiatry' ? 'selected' : '' %>>Psychiatry</option>
             </select>
           </div>
           <div class="form-group">
             <label for="doctor">Select Doctor</label>
             <select id="doctor" name="doctor" required>
               <option value="">--Choose a Doctor--</option>
+              <% if (selectedDoctor) { %>
+              <option value="<%= selectedDoctor._id %>" selected><%= selectedDoctor.name %></option>
+              <% } %>
             </select>
           </div>
         </div>
@@ -248,4 +251,25 @@ req.user.name : '' %>"
           });
       });
   </script>
+  <% if (selectedDoctor) { %>
+  <script>
+    // Load slots if doctor is pre-selected
+    window.addEventListener('DOMContentLoaded', function() {
+      const doctorSelect = document.getElementById("doctor");
+      const specialitySelect = document.getElementById("speciality");
+
+      // Set speciality based on selected doctor
+      specialitySelect.value = "<%= selectedDoctor.field %>";
+
+      // Trigger speciality change to load doctors
+      specialitySelect.dispatchEvent(new Event('change'));
+
+      // Wait a bit for doctors to load, then set the selected doctor
+      setTimeout(() => {
+        doctorSelect.value = "<%= selectedDoctor._id %>";
+        doctorSelect.dispatchEvent(new Event('change'));
+      }, 500);
+    });
+  </script>
+  <% } %>
 </html>

@@ -89,7 +89,7 @@
           <div class="doctor-cards">
             <% (Array.isArray(doctors) ? doctors : []).forEach(d => { %>
             <div class="doctor-card" tabindex="0">
-              <img src="<%= d.img %>" alt="<%= d.name %>" />
+              <img src="/images/<%= d.img %>" alt="<%= d.name %>" />
               <h3><%= d.name %></h3>
               <p><%= d.field %></p>
               <div

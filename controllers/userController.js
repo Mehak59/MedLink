@@ -4,6 +4,33 @@ const Appointment = require('../models/appointment');
 const DoctorSlot = require('../models/doctorSlot');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { sendToken } = require('../utils/jwtHelper');
+
+// Strong password validation function
+const validatePassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (password.length < minLength) {
+        return 'Password must be at least 8 characters long';
+    }
+    if (!hasUpperCase) {
+        return 'Password must contain at least one uppercase letter';
+    }
+    if (!hasLowerCase) {
+        return 'Password must contain at least one lowercase letter';
+    }
+    if (!hasNumbers) {
+        return 'Password must contain at least one number';
+    }
+    if (!hasSpecialChar) {
+        return 'Password must contain at least one special character';
+    }
+    return null; // Valid password
+};
 
 const registerUser = async (req, res, next) => {
     const { name, username, email, password, responseType } = req.body;
@@ -15,11 +42,12 @@ const registerUser = async (req, res, next) => {
         return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
-    if (password.length < 8) {
+    const passwordError = validatePassword(password);
+    if (passwordError) {
         if (responseType === 'redirect') {
-            return res.redirect('/register?error=Length');
+            return res.redirect('/register?error=WeakPassword');
         }
-        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+        return res.status(400).json({ message: passwordError });
     }
 
     try {
@@ -35,8 +63,7 @@ const registerUser = async (req, res, next) => {
         const user = await User.create({ name, username, email, password: hashedPassword });
 
         if (user) {
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
-            res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); 
+            sendToken(res, user._id);
 
             if (responseType === 'redirect') {
                 if (user.role === 'admin') {
@@ -67,9 +94,8 @@ const loginUser = async (req, res, next) => {
         const foundUser = await User.findOne({ username }).exec();
 
         if (foundUser && (await bcrypt.compare(password, foundUser.password))) {
-            
-            const token = jwt.sign({ id: foundUser._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
-            res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
+
+            sendToken(res, foundUser._id);
 
             if (responseType === 'redirect') {
                 if (foundUser.role === 'admin') {

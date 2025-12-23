@@ -3,10 +3,45 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Appointment = require('../models/appointment');
 const DoctorSlot = require('../models/doctorSlot');
+const redisClient = require('../utils/redisClient');
+const { sendToken } = require('../utils/jwtHelper');
+
+// Strong password validation function
+const validatePassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (password.length < minLength) {
+        return 'Password must be at least 8 characters long';
+    }
+    if (!hasUpperCase) {
+        return 'Password must contain at least one uppercase letter';
+    }
+    if (!hasLowerCase) {
+        return 'Password must contain at least one lowercase letter';
+    }
+    if (!hasNumbers) {
+        return 'Password must contain at least one number';
+    }
+    if (!hasSpecialChar) {
+        return 'Password must contain at least one special character';
+    }
+    return null; // Valid password
+};
 
 const getAllDoctors = async (req, res, next) => {
     try {
+        const cacheKey = 'doctors_list';
+        const cachedDoctors = await redisClient.get(cacheKey);
+        if (cachedDoctors) {
+            return res.status(200).json(JSON.parse(cachedDoctors));
+        }
+
         const doctors = await Doctor.find();
+        await redisClient.setEx(cacheKey, 600, JSON.stringify(doctors)); // Cache for 10 minutes
         res.status(200).json(doctors);
     } catch (err) {
         next(err);
@@ -16,20 +51,22 @@ const getAllDoctors = async (req, res, next) => {
 const PendingDoctor = require('../models/pendingDoctor');
 
 const registerDoctor = async (req, res, next) => {
-    const { name, username, email, password, specialization, experience, location, phone, hospital, fees, image, availability } = req.body;
+    const { name, username, email, password, specialization, experience, location, phone, hospital, fees, availability, qualification, rating } = req.body;
+    const image = req.file ? req.file.filename : null;
 
-    if (!name || !username || !email || !password || !specialization || !experience || !location || !phone || !hospital || !fees || !image || !availability) {
+    if (!name || !username || !email || !password || !specialization || !experience || !location || !phone || !hospital || !fees || !image || !availability || !qualification || !rating) {
         if (req.body.responseType === 'redirect') {
             return res.redirect('/doctorRegister?error=MissingFields');
         }
         return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
-    if (password.length < 8) {
+    const passwordError = validatePassword(password);
+    if (passwordError) {
         if (req.body.responseType === 'redirect') {
-            return res.redirect('/doctorRegister?error=Length');
+            return res.redirect('/doctorRegister?error=WeakPassword');
         }
-        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+        return res.status(400).json({ message: passwordError });
     }
 
     try {
@@ -49,7 +86,9 @@ const registerDoctor = async (req, res, next) => {
             email,
             password: hashedPassword,
             specialization,
+            qualification,
             experience,
+            rating,
             location,
             phone,
             hospital,
@@ -84,9 +123,8 @@ const loginDoctor = async (req, res, next) => {
         const foundDoctor = await Doctor.findOne({ username }).exec();
 
         if (foundDoctor && await bcrypt.compare(password, foundDoctor.password)) {
-            
-            const token = jwt.sign({ id: foundDoctor._id }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '1d' });
-            res.cookie('token', token, { httpOnly: true, maxAge: 1 * 24 * 60 * 60 * 1000 }); // 1 day
+
+            sendToken(res, foundDoctor._id);
 
             if (responseType === 'redirect') {
                 return res.redirect('/api/doctors/profile');
@@ -229,11 +267,39 @@ const getAvailableSlots = async (req, res, next) => {
             return res.status(400).json({ message: 'Doctor and date are required' });
         }
 
+        // Get doctor's availability
+        const doctorDoc = await Doctor.findById(doctor);
+        if (!doctorDoc) {
+            return res.status(404).json({ message: 'Doctor not found' });
+        }
+
         let slots = await DoctorSlot.find({ doctor, date: new Date(date) });
 
         if (slots.length === 0) {
-            const startHour = 9;
-            const endHour = 17;
+            // Generate slots based on doctor's availability
+            const availability = doctorDoc.availability;
+            let startHour, endHour;
+
+            switch (availability) {
+                case 'Morning':
+                    startHour = 9;
+                    endHour = 12;
+                    break;
+                case 'Afternoon':
+                    startHour = 12;
+                    endHour = 17;
+                    break;
+                case 'Evening':
+                    startHour = 17;
+                    endHour = 21;
+                    break;
+                case 'Full Day':
+                default:
+                    startHour = 9;
+                    endHour = 17;
+                    break;
+            }
+
             slots = [];
             for (let hour = startHour; hour < endHour; hour++) {
                 const time = `${hour}:00`;

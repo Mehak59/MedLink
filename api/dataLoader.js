@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const redisClient = require('../utils/redisClient');
 
 const ayurvedicSchema = new mongoose.Schema({}, { collection: 'ayurvedic', strict: false });
 const sliderImageSchema = new mongoose.Schema({}, { collection: 'sliderImages', strict: false });
@@ -16,7 +17,14 @@ const SurgicalDevice = mongoose.model('SurgicalDevice', surgicalDeviceSchema);
 
 const loadMedicines = async () => {
   try {
+    const cacheKey = 'medicines';
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log('Loaded medicines from cache');
+      return JSON.parse(cachedData);
+    }
     const data = await Ayurvedic.find({}).lean();
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(data)); // cache for 1 hour
     console.log('Loaded medicines:', data.length);
     return data;
   } catch (err) {

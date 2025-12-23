@@ -23,13 +23,13 @@ const userRoutes = require('./routes/userRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
-const mongoURI = 'mongodb://127.0.0.1:27017/Medlink';
+const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/Medlink';
 mongoose.connect(mongoURI)
   .then(async () => {
     console.log('MongoDB connected successfully');
     const adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const hashedPassword = await bcrypt.hash('Admin@123', 10);
       const admin = new User({
         name: 'Admin',
         username: 'admin',

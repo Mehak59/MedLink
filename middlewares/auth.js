@@ -1,65 +1,52 @@
-const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const Doctor = require('../models/doctor');
+const { verifyToken } = require('../utils/jwtHelper'); // ✅ Uses centralized secret
 
-const authenticateToken = async (req, res, next) => {
+// Generic function to extract and verify token from Header OR Cookie
+const verifyRequest = (req) => {
     const authHeader = req.headers['authorization'];
+    // Check cookie first, then header
     const token = req.cookies.token || (authHeader && authHeader.split(' ')[1]);
 
-    if (!token) {
-        return res.status(401).json({ message: 'Access token required' });
+    if (!token) return null;
+    try {
+        return verifyToken(token); // ✅ Uses correct secret from jwtHelper
+    } catch (err) {
+        return null;
     }
+};
+
+const authenticateToken = async (req, res, next) => {
+    const decoded = verifyRequest(req);
+    if (!decoded) return res.status(401).json({ message: 'Access token required or invalid' });
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
         const user = await User.findById(decoded.id);
-        if (!user) {
-            return res.status(401).json({ message: 'Invalid token' });
-        }
+        if (!user) return res.status(401).json({ message: 'User not found' });
         req.user = user;
         next();
     } catch (err) {
-        res.status(403).json({ message: 'Invalid token' });
+        res.status(403).json({ message: 'Authentication failed' });
     }
 };
 
 const authenticateDoctorToken = async (req, res, next) => {
-    const token = req.cookies.token;
-
-    if (!token) {
-        return res.status(401).json({ message: 'Access token required' });
-    }
+    const decoded = verifyRequest(req);
+    if (!decoded) return res.status(401).json({ message: 'Access token required or invalid' });
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
         const doctor = await Doctor.findById(decoded.id);
-        if (!doctor) {
-            return res.status(401).json({ message: 'Invalid token' });
-        }
+        if (!doctor) return res.status(401).json({ message: 'Doctor not found' });
         req.user = doctor;
         next();
     } catch (err) {
-        res.status(403).json({ message: 'Invalid token' });
+        res.status(403).json({ message: 'Authentication failed' });
     }
 };
 
-const authenticateFromCookie = async (req, res, next) => {
-    const token = req.cookies.token;
-    if (!token) {
-        return res.status(401).json({ message: 'Access token required' });
-    }
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
-        const user = await User.findById(decoded.id);
-        if (!user) {
-            return res.status(401).json({ message: 'Invalid token' });
-        }
-        req.user = user;
-        next();
-    } catch (err) {
-        res.status(403).json({ message: 'Invalid token' });
-    }
-};
+// 👇 OLD BUGGY FUNCTION REPLACED
+// Since authenticateToken already checks cookies, we can just point to it.
+const authenticateFromCookie = authenticateToken;
 
 const requireSessionAuth = (req, res, next) => {
     if (!req.session || !req.session.user) {
@@ -83,10 +70,9 @@ const requireDoctorAuth = (req, res, next) => {
 };
 
 const checkAuthStatus = async (req, res, next) => {
-    const token = req.cookies.token;
-    if (token) {
+    const decoded = verifyRequest(req);
+    if (decoded) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
             const user = await User.findById(decoded.id);
             if (user) {
                 req.isLoggedIn = true;
@@ -101,8 +87,7 @@ const checkAuthStatus = async (req, res, next) => {
                 req.user = doctor;
                 return next();
             }
-        } catch (err) {
-        }
+        } catch (err) {}
     }
     req.isLoggedIn = false;
     req.isUser = false;
@@ -110,4 +95,12 @@ const checkAuthStatus = async (req, res, next) => {
     next();
 };
 
-module.exports = { authenticateToken, authenticateDoctorToken, requireSessionAuth, requireAdmin, requireDoctorAuth, checkAuthStatus, authenticateFromCookie };
+module.exports = {
+    authenticateToken,
+    authenticateDoctorToken,
+    requireSessionAuth,
+    requireAdmin,
+    requireDoctorAuth,
+    checkAuthStatus,
+    authenticateFromCookie // Exporting the alias so adminRoutes works
+};

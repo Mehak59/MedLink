@@ -26,12 +26,12 @@ const approveDoctor = async (req, res, next) => {
             img: pendingDoctor.image,
             name: pendingDoctor.name,
             field: pendingDoctor.specialization,
-            experience: pendingDoctor.experience.toString(),
-            qualification: 'MD', 
-            rating: 5, 
+            experience: pendingDoctor.experience,
+            qualification: pendingDoctor.qualification,
+            rating: pendingDoctor.rating,
             username: pendingDoctor.username,
             email: pendingDoctor.email,
-            password: pendingDoctor.password, 
+            password: pendingDoctor.password,
             location: pendingDoctor.location
         });
 
